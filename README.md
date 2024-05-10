@@ -10,4 +10,4 @@
 - View details
 - Table and Board Views
 - Change task status (To Do / Doing / Finished)
-
+- Filter tasks by status
