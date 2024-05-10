@@ -35,7 +35,7 @@ namespace ToDoList.Models
         
         public void EndTask()
         {
-            this._startDate = DateOnly.FromDateTime(DateTime.Now);
+            this._endDate = DateOnly.FromDateTime(DateTime.Now);
             this._status = "FI";
         }
 
