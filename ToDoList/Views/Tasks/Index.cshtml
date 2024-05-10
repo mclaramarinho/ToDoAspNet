@@ -1,0 +1,116 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@model List<TaskItem>;
+
+@{
+    string translateStatus(string abbr)
+    {
+        return abbr == "TD" ? "To Do" : abbr == "DO" ? "Doing" : "Finished";
+    }
+
+    string chooseStatusAction(string abbr)
+    {
+        return abbr == "TD" ? "bi-play-fill" : abbr == "DO" ? "bi-check" : "bi-arrow-clockwise";
+    }
+    string chooseNewStatus(string abbr)
+    {
+        return abbr == "TD" ? "DO" : abbr == "DO" ? "FI" : "TD";
+    }
+
+    string isBtnSelected(string status)
+    {
+        if (ViewBag.URLFilter == null)
+        {
+            return "btn-secondary";
+        }
+        else
+        {
+            if (ViewBag.URLFilter == status)
+            {
+                return "btn-primary";
+            }
+            else
+            {
+                return "btn-secondary";
+            }
+        }
+    }
+}
+
+<h1 class="mb-5">YOUR TASKS</h1>
+
+<a class="btn btn-md btn-outline-dark mb-3" asp-action="Create" asp-controller="Tasks">Create new task</a>
+
+<div class="container mb-3">
+    <div class="row column-gap-5">
+        <a class="col btn btn-sm @isBtnSelected("TD")" asp-action="Index" asp-controller="Tasks" asp-route-status="TD">TO DO</a>
+        <a class="col btn btn-sm @isBtnSelected("DO")" asp-action="Index" asp-controller="Tasks" asp-route-status="DO">DOING</a>
+        <a class="col btn btn-sm @isBtnSelected("FI")" asp-action="Index" asp-controller="Tasks" asp-route-status="FI">FINISHED</a>
+    </div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Change Status</th>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody class="text-nowrap">
+            @if(Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <h4 class="text-secondary">No tasks to display</h4>
+                    </td>
+                </tr>
+            }
+            @foreach(TaskItem ti in Model)
+            {
+                <tr class="align-content-center">
+                    <td>
+                        <form method="post" asp-action="Index" asp-controller="Tasks" 
+                                asp-route-taskid="@ti.TaskID" asp-route-newStatus="@chooseNewStatus(ti.Status)" 
+                                asp-route-filter="@ViewBag.URLFilter">
+                            <button class="btn">
+                                <i class="bi @chooseStatusAction(ti.Status) text-success"></i>
+                            </button>
+                        </form>
+                    </td>
+                    <td>@ti.TaskTitle</td>
+                    <td>@ti.StartDate</td>
+                    <td>@(ti.EndDate == null ? "none" : ti.EndDate)</td>
+                    <td>@translateStatus(ti.Status)</td>
+                    <td class="text-nowrap">
+                        <a class="me-3 text-decoration-none" asp-action="Delete" asp-controller="Tasks" asp-route-id="@ti.TaskID">
+                            <i class="bi bi-trash3 text-danger"></i>
+                        </a>
+                        <a class="me-1 text-decoration-none" asp-action="Edit" asp-controller="Tasks" asp-route-id="@ti.TaskID">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm bi bi-eye" id="toggle_@ti.TaskID" onclick="openDetails(event)">
+                        </button>
+                    </td>
+                </tr>
+                <tr id="@ti.TaskID" class="d-none">
+                    <td colspan="6">@ti.TaskDescription</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function openDetails(e){
+        const id = e.target.id.split('_')[1];
+        
+        document.getElementById(id).classList.toggle("d-none");
+    }
+</script>

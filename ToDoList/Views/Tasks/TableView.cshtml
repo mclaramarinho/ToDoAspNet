@@ -1,0 +1,84 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model List<TaskItem>;
+
+<div class="container">
+    <div class="row bg-secondary mb-2 p-md-2 text-light text-center">
+        <div class="col-4">
+            <h3 class="m-auto">TO DO</h3>
+        </div>
+        <div class="col-4">
+            <h3 class="m-auto">DONE</h3>
+        </div>
+        <div class="col-4">
+            <h3 class="m-auto">FINISHED</h3>
+        </div>
+    </div>
+    <div class="row">
+            <div class="col-4">
+                @foreach (TaskItem t in Model)
+                {
+                    if (t.Status == "TD")
+                    {
+                        <div class="row mb-3 justify-content-center">
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title">@t.TaskTitle</h5>
+                                    <p class="card-text">@t.TaskDescription</p>
+                                    <form asp-action="Index" asp-route-taskid="@t.TaskID" 
+                                            asp-route-redirectTo="TableView" asp-route-newStatus="DO">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">Mark Doing</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="col-4">
+                @foreach (TaskItem t in Model)
+                {
+                    if (t.Status == "DO")
+                    {
+                        <div class="row mb-3 justify-content-center">
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title">@t.TaskTitle</h5>
+                                    <p class="card-text">@t.TaskDescription</p>
+                                    <form asp-action="Index" asp-route-taskid="@t.TaskID"
+                                          asp-route-redirectTo="TableView" asp-route-newStatus="FI">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Mark Done</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="col-4">
+                @foreach (TaskItem t in Model)
+                {
+                    if (t.Status == "FI")
+                    {
+                        <div class="row mb-3 justify-content-center">
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title">@t.TaskTitle</h5>
+                                    <p class="card-text">@t.TaskDescription</p>
+                                    <form asp-action="Index" asp-route-taskid="@t.TaskID"
+                                          asp-route-redirectTo="TableView" asp-route-newStatus="TD">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">Do again</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+        </div>
+    </div>

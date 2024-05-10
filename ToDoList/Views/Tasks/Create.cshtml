@@ -1,0 +1,21 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model ToDoList.Models.TaskItem;
+
+<form method="post" class="col-12 m-auto col-md-6 col-lg-4" asp-action="Create" asp-controller="Tasks">
+    <div class="mb-3">
+        <label class="form-label" asp-for="TaskTitle"></label>
+        <input class="form-control" asp-for="TaskTitle" />
+        <span asp-validation-for="TaskTitle"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" asp-for="TaskDescription"></label>
+        <input class="form-control" asp-for="TaskDescription" />
+        <span asp-validation-for="TaskDescription"></span>
+    </div>
+
+    <button class="btn btn-lg btn-success" type="submit">Create</button>
+</form>
