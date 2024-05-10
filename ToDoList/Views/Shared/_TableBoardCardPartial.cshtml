@@ -1,0 +1,28 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    TaskItem m = Model;
+
+    Dictionary<string, string> data = new Dictionary<string, string>();
+    data.Add("newStatus", m.Status == "TD" ? "DO" : m.Status == "DO" ? "FI" : "TD");
+    data.Add("buttonName", m.Status == "TD" ? "Mark Doing" : m.Status == "DO" ? "Mark Done" : "Start Again");
+    data.Add("buttonColor", m.Status == "TD" ? "primary" : m.Status == "DO" ? "success" : "warning");
+
+}
+@model ToDoList.Models.TaskItem;
+
+
+
+<div class="row mb-3 justify-content-center">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@Model.TaskTitle</h5>
+            <p class="card-text">@Model.TaskDescription</p>
+            <form asp-action="Index" asp-route-taskid="@Model.TaskID"
+                  asp-route-redirectTo="TableView" asp-route-newStatus="@data["newStatus"]">
+                <button type="submit" class="btn btn-sm btn-outline-@data["buttonColor"]">@data["buttonName"]</button>
+            </form>
+        </div>
+    </div>
+</div>
