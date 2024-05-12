@@ -1,8 +1,4 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-
-@model List<TaskItem>;
+﻿@model List<TaskItem>;
 
 @{
     string translateStatus(string abbr)
@@ -50,6 +46,9 @@
         <a class="col btn btn-sm @isBtnSelected("FI")" asp-action="Index" asp-controller="Tasks" asp-route-status="FI">FINISHED</a>
     </div>
 </div>
+@if(TempData["ToasterType"] != null){
+    Html.RenderPartial("_NotificationPartial", (string)TempData["ToasterType"]);
+}   
 <div class="table-responsive">
     <table class="table table-striped table-hover align-middle">
         <thead>
