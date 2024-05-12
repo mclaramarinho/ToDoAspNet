@@ -65,7 +65,8 @@ namespace ToDoList.Controllers
             task.CreateTask();
             
             _tasks.Add(task);
-            
+
+            TempData["ToasterType"] = "success";
             return RedirectToAction(nameof(Index));
         }
 
