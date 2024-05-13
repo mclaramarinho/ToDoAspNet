@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ToDoList.Data;
 using ToDoList.Models;
 using static ToDoList.Models.TaskItem;
 
@@ -6,15 +7,21 @@ namespace ToDoList.Controllers
 {
     public class TasksController : Controller
     {
-        private static List<TaskItem> _tasks = new List<TaskItem>();
+        private readonly ApplicationDbContext _db;
+
+        public TasksController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
 
         public IActionResult Index(string? status)
         {
-            List<TaskItem> tasks = _tasks.ToList();
+            List<TaskItem> tasks = _db.TaskItems.ToList();
             if(status != null)
             {
                 Console.WriteLine(status);
                 tasks = tasks.FindAll(i => i.Status == status);
+
                 ViewBag.URLFilter = status;
             }
             return View(tasks);
@@ -22,7 +29,7 @@ namespace ToDoList.Controllers
 
         public IActionResult TableView()
         {
-            return View(_tasks.ToList());
+            return View(_db.TaskItems.ToList());
         }
 
         [HttpPost, ActionName("Index")]
@@ -34,15 +41,18 @@ namespace ToDoList.Controllers
                 return NotFound();
             }
 
+            TaskItem t = _db.TaskItems.First(t => t.TaskID == taskid);
+
             if (newStatus == "TD") {
-                _tasks.First(t => t.TaskID == taskid).CreateTask();
+                t.ReopenTask(_db);
             } else if (newStatus == "DO")
             {
-                _tasks.First(t => t.TaskID == taskid).DoTask();
+                t.DoTask(_db);
             } else if (newStatus == "FI")
             {
-                _tasks.First(t => t.TaskID == taskid).EndTask();
+                t.EndTask(_db);
             }
+
             if (filter == null)
             {
                 return RedirectToAction(redirectTo);
@@ -63,8 +73,9 @@ namespace ToDoList.Controllers
         public IActionResult Create([Bind("TaskTitle,TaskDescription")] TaskItem task)
         {
             task.CreateTask();
-            
-            _tasks.Add(task);
+
+            _db.TaskItems.Add(task);
+            _db.SaveChanges();
 
             TempData["ToasterType"] = "success";
             return RedirectToAction(nameof(Index));
@@ -74,7 +85,7 @@ namespace ToDoList.Controllers
         {
             if (_taskExists(id))
             {
-                return View(_tasks.First(t=>t.TaskID==id));
+                return View(_db.TaskItems.First(t=>t.TaskID==id));
             }
             else
             {
@@ -87,9 +98,13 @@ namespace ToDoList.Controllers
         {
             if (_taskExists(id))
             {
-                TaskItem t = _tasks.First(i => i.TaskID == id);
+                TaskItem t = _db.TaskItems.First(i => i.TaskID == id);
                 t.TaskTitle = task.TaskTitle;
                 t.TaskDescription = task.TaskDescription;
+
+                _db.TaskItems.Update(t);
+                _db.SaveChanges();
+
                 return RedirectToAction(nameof(Index));
             }
             else
@@ -108,7 +123,7 @@ namespace ToDoList.Controllers
 
             if (_taskExists((Guid)id))
             {
-                TaskItem t = _tasks.First(i => i.TaskID == id);
+                TaskItem t = _db.TaskItems.First(i => i.TaskID == id);
                 return View(t);
             }
             else
@@ -124,7 +139,8 @@ namespace ToDoList.Controllers
 
             if(_taskExists(id))
             {
-                _tasks.Remove(_tasks.First(t => t.TaskID == id));
+                _db.TaskItems.Remove(_db.TaskItems.First(t => t.TaskID == id));
+                _db.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
             else
@@ -137,7 +153,7 @@ namespace ToDoList.Controllers
         
         private bool _taskExists(Guid id)
         {
-            return _tasks.Any(t => t.TaskID == id);
+            return _db.TaskItems.Any(t => t.TaskID == id);
         }
 
     }

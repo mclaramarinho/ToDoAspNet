@@ -84,8 +84,8 @@
                         </form>
                     </td>
                     <td>@ti.TaskTitle</td>
-                    <td>@ti.StartDate</td>
-                    <td>@(ti.EndDate == null ? "none" : ti.EndDate)</td>
+                    <td>@ti.StartDate.ToString("dd/MM/yyyy")</td>
+                    <td>@(ti.EndDate == null ? "none" : ti.EndDate?.ToString("dd/MM/yyyy") )</td>
                     <td>@translateStatus(ti.Status)</td>
                     <td class="text-nowrap">
                         <a class="me-3 text-decoration-none" asp-action="Delete" asp-controller="Tasks" asp-route-id="@ti.TaskID">
@@ -99,7 +99,7 @@
                     </td>
                 </tr>
                 <tr id="@ti.TaskID" class="d-none">
-                    <td colspan="6">@ti.TaskDescription</td>
+                    <td colspan="6">@(ti.TaskDescription == null ? "No description provided" : ti.TaskDescription)</td>
                 </tr>
             }
         </tbody>
