@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using ToDoList.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ToDoList.Models
 {
@@ -38,34 +37,32 @@ namespace ToDoList.Models
         [DataType(DataType.Text)]
         public string Status { get => _status; }
 
-        
-        public void EndTask(ApplicationDbContext db)
+        [ForeignKey("UserID")]
+        public int UserID { get; set; }
+        public virtual User? User { get; set; }
+
+        public void EndTask()
         {
             this._endDate = DateTime.Now.Date;
             this._status = "FI";
-            db.TaskItems.Update(this);
-            db.SaveChanges();
         }
 
-        public void ReopenTask(ApplicationDbContext db)
+        public void ReopenTask()
         {
             this._endDate = null;
             this._status = "TD";
-            db.TaskItems.Update(this);
-            db.SaveChanges();
         }
 
-        public void CreateTask()
+        public void CreateTask(User user)
         {
             this._status = "TD";
             this._startDate = DateTime.Now.Date;
+            this.User = user;
         }
 
-        public void DoTask(ApplicationDbContext db)
+        public void DoTask()
         {
             this._status = "DO";
-            db.TaskItems.Update(this);
-            db.SaveChanges();
         }
     }
 }
