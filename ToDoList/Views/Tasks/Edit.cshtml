@@ -7,13 +7,14 @@
 @model TaskItem;
 
 
-<form class="col-12 m-auto col-md-6 col-lg-4" 
+<form class="col-12 m-auto col-md-6 col-lg-4"  method="post"
     asp-action="Edit" asp-controller="Tasks" asp-route-id="@Model.TaskID">
     
     <input type="hidden" asp-for="TaskID" />
     <input type="hidden" asp-for="StartDate" />
     <input type="hidden" asp-for="EndDate" />
     <input type="hidden" asp-for="Status" />
+    <input type="hidden" asp-for="UserID" />
 
     <div class="mb-3">
         <label class="form-label" asp-for="TaskTitle"></label>
