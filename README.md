@@ -26,4 +26,5 @@
 
 ### After changing the server name, do the following in the Package Manager Console
 ```add-migration <NameTheMigration>```
+
 ```update-database```
