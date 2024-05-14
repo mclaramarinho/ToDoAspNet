@@ -1,66 +1,62 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ToDoList.Data;
 using ToDoList.Models;
-using static ToDoList.Models.TaskItem;
-
+using ToDoList.Services;
 namespace ToDoList.Controllers
 {
     public class TasksController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ITaskService _tasks;
+        private readonly IUsersServices _users;
+        private readonly IAccessControlService _auth;
 
-        public TasksController(ApplicationDbContext db)
+        public TasksController(ITaskService tasks, IUsersServices users, IAccessControlService auth)
         {
-            _db = db;
+            _tasks = tasks;
+            _users = users;
+            _auth = auth;
         }
 
         public IActionResult Index(string? status)
         {
-            List<TaskItem> tasks = _db.TaskItems.ToList();
+            if (!_auth.VerifyIfUserLoggedIn())
+            {
+                return RedirectToAction("Login", "Users");
+            }
+            List<TaskItem> tasks = _tasks.GetAllTasks();
+
+            tasks = tasks.FindAll(i => i.UserID == _auth.LoggedUser);
             if(status != null)
             {
-                Console.WriteLine(status);
                 tasks = tasks.FindAll(i => i.Status == status);
 
                 ViewBag.URLFilter = status;
             }
+
             return View(tasks);
         }
 
         public IActionResult TableView()
         {
-            return View(_db.TaskItems.ToList());
+            return View(_tasks.GetAllTasks());
         }
 
         [HttpPost, ActionName("Index")]
-        public IActionResult ChangeStatus(Guid taskid, string newStatus, string filter, string ? redirectTo)
+        public async Task<IActionResult> ChangeStatus(Guid taskid, string newStatus, string filter, string? redirectTo)
         {
             redirectTo ??= "Index";
 
-            if(redirectTo != "TableView" && redirectTo != "Index") {
+            if (redirectTo != "TableView" && redirectTo != "Index")
+            {
                 return NotFound();
             }
 
-            TaskItem t = _db.TaskItems.First(t => t.TaskID == taskid);
+            bool updated = await _tasks.UpdateStatus(taskid, newStatus);
 
-            if (newStatus == "TD") {
-                t.ReopenTask(_db);
-            } else if (newStatus == "DO")
+            if (!updated)
             {
-                t.DoTask(_db);
-            } else if (newStatus == "FI")
-            {
-                t.EndTask(_db);
+                return BadRequest();
             }
-
-            if (filter == null)
-            {
-                return RedirectToAction(redirectTo);
-            }
-            else
-            {
-                return RedirectToAction(redirectTo, routeValues: new {status=filter});
-            }
+            return filter == null ? RedirectToAction(redirectTo) : RedirectToAction(redirectTo, routeValues: new { status = filter });
         }
 
 
@@ -70,42 +66,32 @@ namespace ToDoList.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([Bind("TaskTitle,TaskDescription")] TaskItem task)
+        public async Task<IActionResult> Create([Bind("TaskTitle,TaskDescription")] TaskItem task)
         {
-            task.CreateTask();
+            if (!_auth.VerifyIfUserLoggedIn())
+            {
+                return RedirectToAction("Login", "Users");
+            }
+            bool created = await _tasks.CreateTask(task, (int)_auth.LoggedUser);
 
-            _db.TaskItems.Add(task);
-            _db.SaveChanges();
+            TempData["ToasterType"] = !created ? "error" : "success";
 
-            TempData["ToasterType"] = "success";
             return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Edit(Guid id)
         {
-            if (_taskExists(id))
-            {
-                return View(_db.TaskItems.First(t=>t.TaskID==id));
-            }
-            else
-            {
-                return NotFound();
-            }
+            return _tasks.TaskExists(id) ? View(_tasks.GetTask(id)) : NotFound();
         }
 
         [HttpPost]
-        public IActionResult Edit(Guid id, [Bind("TaskID,TaskTitle,TaskDescription,StartDate,EndDate,Status")] TaskItem task)
+        public async Task<IActionResult> Edit(Guid id, [Bind("TaskID, EndDate, StartDate, Status, UserID, TaskTitle,TaskDescription")] TaskItem task)
         {
-            if (_taskExists(id))
+            if (_tasks.TaskExists(id))
             {
-                TaskItem t = _db.TaskItems.First(i => i.TaskID == id);
-                t.TaskTitle = task.TaskTitle;
-                t.TaskDescription = task.TaskDescription;
+                bool updated = await _tasks.UpdateTask(id, task);
 
-                _db.TaskItems.Update(t);
-                _db.SaveChanges();
-
-                return RedirectToAction(nameof(Index));
+                return updated ? RedirectToAction(nameof(Index)) : StatusCode(500);
             }
             else
             {
@@ -116,45 +102,25 @@ namespace ToDoList.Controllers
 
         public IActionResult Delete(Guid? id)
         {
-            if (id == null)
-            {
-                return RedirectToAction(nameof(Index));
-            }
 
-            if (_taskExists((Guid)id))
+            if (id == null) { return RedirectToAction(nameof(Index)); }
+
+            try
             {
-                TaskItem t = _db.TaskItems.First(i => i.TaskID == id);
+                TaskItem t = _tasks.GetTask((Guid)id) ?? throw new Exception("Returned null");
+
                 return View(t);
-            }
-            else
+            }catch (Exception ex)
             {
                 return NotFound();
             }
         }
 
         [HttpPost, ActionName("Delete")]
-        public IActionResult ConfirmDelete(Guid id)
+        public async Task<IActionResult> ConfirmDelete(Guid id)
         {
-            Console.WriteLine(id);
-
-            if(_taskExists(id))
-            {
-                _db.TaskItems.Remove(_db.TaskItems.First(t => t.TaskID == id));
-                _db.SaveChanges();
-                return RedirectToAction(nameof(Index));
-            }
-            else
-            {
-                return NotFound();
-            }
+            bool deleted = await _tasks.DeleteTask(id);
+            return deleted ? RedirectToAction(nameof(Index)) : NotFound();
         }
-
-        
-        
-        private bool _taskExists(Guid id)
-        {
-            return _db.TaskItems.Any(t => t.TaskID == id);
-        }
-
     }
 }
