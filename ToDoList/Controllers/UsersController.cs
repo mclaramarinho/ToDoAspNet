@@ -37,7 +37,11 @@ namespace ToDoList.Controllers
             {
                 bool created = await _users.CreateUser(user);
 
-                if (created) { return View(nameof(Index)); }
+                if (created) {
+                    User u = _users.FindUserByEmail(user.Email);
+                    _auth.Login(u.UserID);
+                    return RedirectToAction("Index", "Tasks"); 
+                }
                 else
                 {
                     throw new Exception("Error creating user");
